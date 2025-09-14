@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>多功能交互式手机主屏</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'PingFang SC', 'Helvetica Neue', Arial, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #6e8efb, #a777e3);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .phone-container {
+            width: 360px;
+            height: 700px;
+            background: rgba(255, 255, 255, 0.85);
+            border-radius: 40px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+        
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 25px 10px;
+            color: #333;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .time-display {
+            text-align: center;
+            padding: 15px 0;
+        }
+        
+        .current-time {
+            font-size: 58px;
+            font-weight: 700;
+            color: #333;
+        }
+        
+        .current-date {
+            font-size: 16px;
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        .app-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px 18px;
+            padding: 25px;
+            flex-grow: 1;
+        }
+        
+        .app-icon {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .app-icon:active {
+            transform: scale(0.95);
+        }
+        
+        .icon-container {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .app-name {
+            font-size: 12px;
+            color: #333;
+            text-align: center;
+        }
+        
+        .bottom-bar {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding: 15px 25px;
+            background: rgba(255, 255, 255, 0.7);
+            border-top: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .bottom-icon {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+        }
+        
+        .bottom-icon-container {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+        
+        /* App icon colors */
+        .qq { background: linear-gradient(135deg, #12b7f5, #2d90fc); }
+        .meituan { background: linear-gradient(135deg, #ff3000, #ff8400); }
+        .alipay { background: linear-gradient(135deg, #1677ff, #00aaff); }
+        .taobao { background: linear-gradient(135deg, #ff4000, #ff7340); }
+        .world-book { background: linear-gradient(135deg, #7b5dfa, #a277ff); }
+        .settings { background: linear-gradient(135deg, #8e8e93, #aeaeb2); }
+        .notes { background: linear-gradient(135deg, #ffd439, #ffb46c); }
+        .theme { background: linear-gradient(135deg, #ff55a5, #ff7676); }
+        .gallery { background: linear-gradient(135deg, #7d7d7d, #a5a5a5); }
+        .music { background: linear-gradient(135deg, #ff2d55, #ff3b30); }
+        .couple { background: linear-gradient(135deg, #ff6b6b, #ff8e8e); }
+        .email { background: linear-gradient(135deg, #007aff, #5ac8fa); }
+        .calculator { background: linear-gradient(135deg, #4cd964, #5bd975); }
+        .forum { background: linear-gradient(135deg, #5856d6, #7876ff); }
+        .browser { background: linear-gradient(135deg, #34aadc, #4bbcde); }
+        
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 40px;
+            z-index: 100;
+            padding: 30px;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-content {
+            width: 100%;
+            max-width: 300px;
+            text-align: center;
+        }
+        
+        .modal-title {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: #333;
+        }
+        
+        .modal-close {
+            position: absolute;
+            top: 30px;
+            right: 30px;
+            font-size: 24px;
+            color: #333;
+            cursor: pointer;
+        }
+        
+        /* Battery icon animation */
+        .battery {
+            width: 24px;
+            height: 12px;
+            border: 1px solid #333;
+            border-radius: 2px;
+            position: relative;
+        }
+        
+        .battery::after {
+            content: '';
+            position: absolute;
+            right: -3px;
+            top: 3px;
+            width: 2px;
+            height: 6px;
+            background: #333;
+            border-radius: 0 1px 1px 0;
+        }
+        
+        .battery-level {
+            position: absolute;
+            left: 2px;
+            top: 2px;
+            bottom: 2px;
+            width: 16px;
+            background: #333;
+            border-radius: 1px;
+            animation: battery-drain 8s infinite;
+        }
+        
+        @keyframes battery-drain {
+            0% { width: 16px; }
+            50% { width: 4px; }
+            100% { width: 16px; }
+        }
+        
+        /* Wifi icon animation */
+        .wifi-icon {
+            position: relative;
+            width: 18px;
+            height: 14px;
+        }
+        
+        .wifi-icon i {
+            position: absolute;
+            font-size: 14px;
+            color: #333;
+            animation: wifi-pulse 2s infinite;
+        }
+        
+        @keyframes wifi-pulse {
+            0% { opacity: 0.7; }
+            50% { opacity: 1; }
+            100% { opacity: 0.7; }
+        }
+    </style>
+</head>
+<body>
+    <div class="phone-container">
+        <!-- 状态栏 -->
+        <div class="status-bar">
+            <div class="current-time-short">21:44</div>
+            <div class="operator">中国移动</div>
+            <div class="wifi-icon"><i class="fas fa-wifi"></i></div>
+            <div class="battery">
+                <div class="battery-level"></div>
+            </div>
+        </div>
+        
+        <!-- 时间显示 -->
+        <div class="time-display">
+            <div class="current-time" id="current-time">21:44</div>
+            <div class="current-date" id="current-date">9月13日 星期六</div>
+        </div>
+        
+        <!-- 应用网格 -->
+        <div class="app-grid">
+            <!-- 第一行 -->
+            <div class="app-icon" onclick="openApp('QQ')">
+                <div class="icon-container qq">
+                    <i class="fab fa-qq" style="color: white; font-size: 22px;"></i>
+                </div>
+                <div class="app-name">QQ</div>
+            </div>
+            
+            <div class="app-icon" onclick="openApp('设置')">
+                <div class="icon-container settings">
+                    <i class="fas fa-cog" style="color: white; font-size: 20px;"></i>
+                </div>
+                <div class="app-name">设置</div>
+            </div>
+            
+            <div class="app-icon" onclick="openApp('支付宝')">
+                <div class="icon-container alipay">
+                    <i class="fab fa-alipay" style="color: white; font-size: 24px;"></i>
+                </div>
+                <div class="app-name">支付宝</div>
+            </div>
+            
+            <div class="app-icon" onclick="openApp('备忘录')">
+                <div class="icon-container notes">
+                    <i class="fas fa-sticky-note" style="color: white; font-size: 20px;"></i>
+                </div>
+                <div class="app-name">备忘录</div>
+            </div>
+            
+            <!-- 第二行 -->
+            <div class="app-icon" onclick="openApp('主题外观')">
+                <div class="icon-container theme">
+                    <i class="fas fa-paint-brush" style="color: white; font-size: 18px;"></i>
+                </div>
+                <div class="app-name">主题外观</div>
+            </div>
+            
+            <div class="app-icon" onclick="openApp('世界书')">
+                <div class="icon-container world-book">
+                    <i class="fas fa-book" style="color: white; font-size: 18px;"></i>
+                </div>
+                <div class="app-name">世界书</div>
+            </div>
+            
+            <div class="app-icon" onclick="openApp('美团外卖')">
+                <div class="icon-container meituan">
+                    <i class="fas fa-utensils" style="color: white; font-size: 18px;"></i>
+                </div>
+                <div class="app-name">美团外卖</div>
+            </div>
+            
+            <div class="app-icon" onclick="openApp('淘宝')">
+                <div class="icon-container taobao">
+                    <i class="fas fa-shopping-cart" style="color: white; font-size: 18px;"></i>
+                </div>
+                <div class="app-name">淘宝</div>
+            </div>
+            
+            <!-- 第三行 -->
+            <div class="app-icon" onclick="openApp('相册')">
+                <div class="icon-container gallery">
+                    <i class="fas fa-image" style="color: white; font-size: 18px;"></i>
+                </div>
+                <div class="app-name">相册</div>
+            </div>
+            
+            <div class="app-icon" onclick="openApp('音乐')">
+                <div class="icon-container music">
+                    <i class="fas fa-music" style="color: white; font-size: 18px;"></i>
+                </div>
+                <div class="app-name">音乐</div>
+            </div>
+            
+            <div class="app-icon" onclick="openApp('情侣空间')">
+                <div class="icon-container couple">
+                    <i class="fas fa-heart" style="color: white; font-size: 18px;"></i>
+                </div>
+                <div class="app-name">情侣空间</div>
+            </div>
+            
+            <div class="app-icon" onclick="openApp('论坛')">
+                <div class="icon-container forum">
+                    <i class="fas fa-comments" style="color: white; font-size: 18px;"></i>
+                </div>
+                <div class="app-name">论坛</div>
+            </div>
+        </div>
+        
+        <!-- 底部应用栏 -->
+        <div class="bottom-bar">
+            <div class="bottom-icon" onclick="openApp('邮箱')">
+                <div class="bottom-icon-container email">
+                    <i class="fas fa-envelope" style="color: white; font-size: 18px;"></i>
+                </div>
+                <div class="app-name">邮箱</div>
+            </div>
+            
+            <div class="bottom-icon" onclick="openApp('计算器')">
+                <div class="bottom-icon-container calculator">
+                    <i class="fas fa-calculator" style="color: white; font-size: 18px;"></i>
+                </div>
+                <div class="app-name">计算器</div>
+            </div>
+            
+            <div class="bottom-icon" onclick="openApp('论坛')">
+                <div class="bottom-icon-container forum">
+                    <i class="fas fa-comments" style="color: white; font-size: 18px;"></i>
+                </div>
+                <div class="app-name">论坛</div>
+            </div>
+            
+            <div class="bottom-icon" onclick="openApp('浏览器')">
+                <div class="bottom-icon-container browser">
+                    <i class="fas fa-compass" style="color: white; font-size: 18px;"></i>
+                </div>
+                <div class="app-name">浏览器</div>
+            </div>
+        </div>
+        
+        <!-- 模态框 -->
+        <div class="modal" id="app-modal">
+            <div class="modal-close" onclick="closeApp()">
+                <i class="fas fa-times"></i>
+            </div>
+            <div class="modal-content">
+                <div class="modal-title" id="modal-app-name">应用名称</div>
+                <p>这里是应用的功能界面，您可以进行相关操作。</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 更新时间显示
+        function updateTime() {
+            const now = new Date();
+            const timeElem = document.getElementById('current-time');
+            const dateElem = document.getElementById('current-date');
+            const shortTimeElem = document.querySelector('.current-time-short');
+            
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            
+            const weekdays = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
+            const month = now.getMonth() + 1;
+            const day = now.getDate();
+            const weekday = weekdays[now.getDay()];
+            
+            timeElem.textContent = `${hours}:${minutes}`;
+            shortTimeElem.textContent = `${hours}:${minutes}`;
+            dateElem.textContent = `${month}月${day}日 ${weekday}`;
+        }
+        
+        // 初始化时间
+        updateTime();
+        setInterval(updateTime, 60000);
+        
+        // 打开应用
+        function openApp(appName) {
+            document.getElementById('modal-app-name').textContent = appName;
+            document.getElementById('app-modal').style.display = 'flex';
+        }
+        
+        // 关闭应用
+        function closeApp() {
+            document.getElementById('app-modal').style.display = 'none';
+        }
+        
+        // 添加触摸效果
+        document.querySelectorAll('.app-icon, .bottom-icon').forEach(icon => {
+            icon.addEventListener('touchstart', function() {
+                this.style.transform = 'scale(0.95)';
+            });
+            
+            icon.addEventListener('touchend', function() {
+                this.style.transform = 'scale(1)';
+            });
+        });
+    </script>
+</body>
+  </html>
